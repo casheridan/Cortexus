@@ -1,0 +1,57 @@
+# ===================================================================
+# .gitignore for Cortexus Monorepo (Node.js Backend + Vite Frontend)
+# ===================================================================
+
+# General & OS Files
+# ------------------
+.DS_Store
+Thumbs.db
+
+# Logs
+# ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE & Editor Directories
+# ------------------------
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Dependencies
+# ------------
+# This is the most important rule. The `**` pattern ignores node_modules
+# in the root directory and in all workspaces (frontend, backend, etc.).
+**/node_modules
+
+# Build & Output Directories
+# --------------------------
+# The `dist` folder is the standard output for Vite builds.
+# The `build` folder is also a common convention.
+**/dist
+**/build
+.out/
+
+# Vite Specific Files
+# -------------------
+# Vite's cache and ssr output
+.vite/
+dist-ssr
+
+# Environment Variables
+# ---------------------
+# Never commit your environment variables.
+# Create a .env.example file to show what variables are needed.
+.env
+.env.local
+.env.*.local
+
+# But do commit the example file
+!.env.example
+
+# Testing
+# -------
+coverage/
+.nyc_output/
