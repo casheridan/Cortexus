@@ -1,19 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
-import tailwindcss from '@tailwindcss/postcss' // Import the plugin
-import autoprefixer from 'autoprefixer'       // Import autoprefixer
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(), // Add Tailwind v4 Vite plugin
   ],
-  css: { // Add this css object
-    postcss: {
-      plugins: [
-        tailwindcss,
-        autoprefixer,
-      ],
-    },
-  },
+  server: {
+    port: 5173,
+    host: true
+  }
 })
