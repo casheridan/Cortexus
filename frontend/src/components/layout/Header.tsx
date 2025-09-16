@@ -1,7 +1,7 @@
 import React from 'react';
 import { BellIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 
-const Header = () => {
+const Header: React.FC = () => {
   return (
     <header className="bg-white h-20 flex items-center justify-between px-8 border-b border-gray-200">
       <div>

@@ -4,14 +4,11 @@ import Sidebar from '../../components/layout/Sidebar';
 import DashboardCard from './components/DashboardCard';
 import { BoltIcon, CubeIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
-const DashboardPage = () => {
+const DashboardPage: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
       <div className="hidden md:flex">
         <Sidebar />
-      </div>
-      <div className="bg-red-500 text-white p-4">
-        If you see a red background, Tailwind is working!
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
