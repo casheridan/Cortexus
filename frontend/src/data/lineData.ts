@@ -28,7 +28,7 @@ const sampleLine = (name = 'SMT Line A'): LineConfig => ({
     {
       id: nanoid(8),
       name: 'Reflow',
-      type: 'BTU Pyramax',
+      type: 'Ersa Hotflow 3',
       x: 720,
       y: 160,
       imageUrl: '',
