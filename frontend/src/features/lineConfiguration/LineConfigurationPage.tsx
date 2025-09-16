@@ -1,6 +1,4 @@
 import React from 'react';
-import Header from '../../components/layout/Header';
-import Sidebar from '../../components/layout/Sidebar';
 import MachineModal from './components/MachineModal';
 import FlowEditor from './components/FlowEditor';
 import { useAppDispatch, useAppSelector } from '../../store';
@@ -23,13 +21,7 @@ const LineConfigurationPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
-      <div className="hidden md:flex">
-        <Sidebar />
-      </div>
-
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
           <div className="p-8 space-y-6">
             <div className="flex items-center justify-between">
