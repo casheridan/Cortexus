@@ -2,47 +2,23 @@
 import React from 'react';
 import DashboardCard from './components/DashboardCard';
 import { BoltIcon, CubeIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { kpiData, machineStatusData, alertsData } from '../../data/machineData';
 
 const DashboardPage: React.FC = () => {
   return (
     <div className="p-8">
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DashboardCard 
-          title="OEE" 
-          value="85%" 
-          change="2%" 
-          changeType="increase" 
-          icon={BoltIcon} 
-        />
-        <DashboardCard 
-          title="Units Produced" 
-          value="10,482" 
-          change="150" 
-          changeType="increase" 
-          icon={CubeIcon} 
-        />
-        <DashboardCard 
-          title="Downtime" 
-          value="27 mins" 
-          change="5 mins" 
-          changeType="decrease" 
-          icon={ClockIcon} 
-        />
-        <DashboardCard 
-          title="Quality" 
-          value="99.7%" 
-          change="0.1%" 
-          changeType="increase" 
-          icon={CheckCircleIcon} 
-        />
-        <DashboardCard 
-          title="First Pass Yield" 
-          value="99.2%" 
-          change="0.1%" 
-          changeType="decrease" 
-          icon={CheckCircleIcon} 
-        />
+        {kpiData.map((kpi, index) => (
+          <DashboardCard 
+            key={index}
+            title={kpi.title} 
+            value={kpi.value} 
+            change={kpi.change} 
+            changeType={kpi.changeType} 
+            icon={kpi.title === "OEE" ? BoltIcon : kpi.title === "Units Produced" ? CubeIcon : kpi.title === "Downtime" ? ClockIcon : CheckCircleIcon} 
+          />
+        ))}
       </div>
 
       {/* Charts Section */}
@@ -66,12 +42,7 @@ const DashboardPage: React.FC = () => {
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Machine Status</h2>
           <div className="space-y-4">
-            {[
-              { name: 'Pick & Place 1', status: 'Running', efficiency: 98 },
-              { name: 'Pick & Place 2', status: 'Running', efficiency: 95 },
-              { name: 'Reflow Oven', status: 'Idle', efficiency: 0 },
-              { name: 'AOI Station', status: 'Running', efficiency: 92 },
-            ].map((machine) => (
+            {machineStatusData.map((machine) => (
               <div key={machine.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className={`w-3 h-3 rounded-full ${
@@ -99,11 +70,7 @@ const DashboardPage: React.FC = () => {
       <div className="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Alerts</h2>
         <div className="space-y-3">
-          {[
-            { time: '2 mins ago', message: 'Pick & Place 2 efficiency below threshold', type: 'warning' },
-            { time: '15 mins ago', message: 'Reflow Oven temperature stabilized', type: 'info' },
-            { time: '1 hour ago', message: 'Shift change completed successfully', type: 'success' },
-          ].map((alert, index) => (
+          {alertsData.map((alert, index) => (
             <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
               <div className={`w-2 h-2 rounded-full ${
                 alert.type === 'warning' ? 'bg-yellow-400' :

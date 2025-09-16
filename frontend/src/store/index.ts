@@ -9,8 +9,18 @@ export const store = configureStore({
     lineConfig: lineConfigReducer,
     ui: uiReducer,
   },
- 
-}); // middleware: (gDM) => gDM().concat() // add custom middleware here
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ['lineConfig/setWorking', 'lineConfig/openEditor'],
+        // Ignore these field paths in all actions
+        ignoredActionPaths: ['meta.arg', 'payload.timestamp'],
+        // Ignore these paths in the state
+        ignoredPaths: ['lineConfig.working', 'lineConfig.original'],
+      },
+    }),
+});
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

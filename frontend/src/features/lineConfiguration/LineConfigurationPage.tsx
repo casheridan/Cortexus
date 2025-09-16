@@ -5,18 +5,17 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import {
   addLine, deleteLine,
   openEditor, closeEditor, saveEditor,
-  setWorking
+  setWorking, addMachine
 } from './state/lineConfigSlice';
 import type { LineConfig, Machine } from './types';
 
 const LineConfigurationPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const lines = useAppSelector(s => s.lineConfig.lines);
-  const editor = useAppSelector(s => s.lineConfig.editor);
+  const { lines, modalOpen, working, original } = useAppSelector(s => s.lineConfig);
 
   const isDirty =
-    editor.working && editor.original
-      ? JSON.stringify(editor.working) !== JSON.stringify(editor.original)
+    working && original
+      ? JSON.stringify(working) !== JSON.stringify(original)
       : false;
 
   return (
@@ -54,7 +53,7 @@ const LineConfigurationPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {lines.map((line: LineConfig, idx: number) => (
+                    {lines.map((line: LineConfig) => (
                       <tr key={line.id} className="text-gray-900">
                         <td className="px-6 py-3">{line.name}</td>
                         <td className="px-6 py-3">
@@ -75,13 +74,13 @@ const LineConfigurationPage: React.FC = () => {
                           <div className="flex gap-2">
                             <button
                               className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs hover:bg-gray-50"
-                              onClick={() => dispatch(openEditor(idx))}
+                              onClick={() => dispatch(openEditor(line.id))}
                             >
                               Edit
                             </button>
                             <button
                               className="rounded-md border border-red-300 bg-white px-2.5 py-1 text-xs text-red-600 hover:bg-red-50"
-                              onClick={() => dispatch(deleteLine(idx))}
+                              onClick={() => dispatch(deleteLine(line.id))}
                             >
                               Delete
                             </button>
@@ -101,33 +100,16 @@ const LineConfigurationPage: React.FC = () => {
         </main>
       </div>
 
-      {editor.isOpen && editor.working && (
+      {modalOpen && working && (
         <MachineModal
-          title={`${editor.working.name} — Flow Editor`}
+          title={`${working.name} — Flow Editor`}
           isDirty={!!isDirty}
           onClose={() => dispatch(closeEditor())}
           onSave={() => dispatch(saveEditor())}
-          onAdd={() => {
-            // Keep 'add machine' logic in slice
-            // dispatch(addMachine()) – we’ll do this inside FlowEditor toolbar or pass a callback
-            // For now we’ll just reuse the old approach by modifying working directly:
-            const w = editor.working!;
-            const nx = (w.machines.length + 1) * 220;
-            const newM = {
-              id: Math.random().toString(36).slice(2, 10),
-              name: `New Machine ${w.machines.length + 1}`,
-              type: 'Custom',
-              x: nx, y: 350,
-              imageUrl: '',
-              cfx: { host: '10.0.0.100', port: 1883, topic: 'cfx/new' },
-              params: {},
-            };
-            const updated = { ...w, machines: [...w.machines, newM] };
-            dispatch(setWorking(updated));
-          }}
+          onAdd={() => dispatch(addMachine())}
         >
           <FlowEditor
-            value={editor.working}
+            value={working}
             onChange={(v) => dispatch(setWorking(v))}
           />
         </MachineModal>

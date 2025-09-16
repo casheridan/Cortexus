@@ -1,75 +1,31 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, nanoid } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { initialLines } from '../../../data/lineData';
 import type { LineConfig, Machine, UUID } from '../types';
 
-const uid = () => Math.random().toString(36).slice(2, 10);
-
 const sampleLine = (name = 'SMT Line A'): LineConfig => ({
-  id: uid(),
+  id: nanoid(8),
   name,
-  machines: [
-    {
-      id: uid(),
-      name: 'Pick & Place 1',
-      type: 'JUKI LX-8',
-      x: 120, y: 160,
-      imageUrl: '',
-      cfx: { host: '10.0.0.10', port: 1883, topic: 'cfx/line-a/pnp1' },
-      params: { feederCount: '8', lane: '1' },
-    },
-    {
-      id: uid(),
-      name: 'SPI',
-      type: 'CyberOptics',
-      x: 420, y: 160,
-      imageUrl: '',
-      cfx: { host: '10.0.0.11', port: 1883, topic: 'cfx/line-a/spi' },
-      params: { threshold: '0.85' },
-    },
-    {
-      id: uid(),
-      name: 'Reflow',
-      type: 'BTU Pyramax',
-      x: 720, y: 160,
-      imageUrl: '',
-      cfx: { host: '10.0.0.12', port: 1883, topic: 'cfx/line-a/reflow' },
-      params: { zones: '8' },
-    },
-    {
-      id: uid(),
-      name: 'AOI',
-      type: 'CyberOptics AOI',
-      x: 1020, y: 160,
-      imageUrl: '',
-      cfx: { host: '10.0.0.13', port: 1883, topic: 'cfx/line-a/aoi' },
-      params: { passMark: '99.0' },
-    },
-  ],
+  machines: [],
   connections: [],
 });
 
-type EditorState = {
-  isOpen: boolean;
-  activeIndex: number | null;
-  original: LineConfig | null;
+type LineConfigState = {
+  lines: LineConfig[];
+  modalOpen: boolean;
   working: LineConfig | null;
+  original: LineConfig | null;
+  activeLineId: UUID | null;
   selectedMachineId: UUID | null;
 };
 
-type LineConfigState = {
-  lines: LineConfig[];
-  editor: EditorState;
-};
-
 const initialState: LineConfigState = {
-  lines: [sampleLine('SMT Line A'), sampleLine('SMT Line B')],
-  editor: {
-    isOpen: false,
-    activeIndex: null,
-    original: null,
-    working: null,
-    selectedMachineId: null,
-  },
+  lines: initialLines,
+  modalOpen: false,
+  working: null,
+  original: null,
+  activeLineId: null,
+  selectedMachineId: null,
 };
 
 const slice = createSlice({
@@ -79,80 +35,83 @@ const slice = createSlice({
     addLine(state) {
       state.lines.push(sampleLine(`SMT Line ${String.fromCharCode(65 + state.lines.length)}`));
     },
-    deleteLine(state, action: PayloadAction<number>) {
-      state.lines.splice(action.payload, 1);
+    deleteLine(state, action: PayloadAction<UUID>) {
+      state.lines = state.lines.filter((l) => l.id !== action.payload);
+      if (state.activeLineId === action.payload) {
+        state.activeLineId = null;
+        state.modalOpen = false;
+        state.working = null;
+        state.original = null;
+      }
     },
-
-    openEditor(state, action: PayloadAction<number>) {
-      const idx = action.payload;
-      state.editor.isOpen = true;
-      state.editor.activeIndex = idx;
-      state.editor.original = state.lines[idx];
-      state.editor.working = JSON.parse(JSON.stringify(state.lines[idx]));
-      state.editor.selectedMachineId = null;
+    openEditor(state, action: PayloadAction<UUID>) {
+      const line = state.lines.find((l) => l.id === action.payload);
+      if (!line) return;
+      state.activeLineId = line.id;
+      state.original = line;
+      state.working = JSON.parse(JSON.stringify(line));
+      state.modalOpen = true;
+      state.selectedMachineId = null;
     },
     closeEditor(state) {
-      state.editor = { isOpen: false, activeIndex: null, original: null, working: null, selectedMachineId: null };
+      state.modalOpen = false;
+      state.activeLineId = null;
+      state.working = null;
+      state.original = null;
+      state.selectedMachineId = null;
     },
     saveEditor(state) {
-      const { activeIndex, working } = state.editor;
-      if (activeIndex != null && working) {
-        state.lines[activeIndex] = working;
-      }
-      state.editor.isOpen = false;
-      state.editor.activeIndex = null;
-      state.editor.original = null;
-      state.editor.working = null;
-      state.editor.selectedMachineId = null;
+      if (!state.working) return;
+      state.lines = state.lines.map((l) => (l.id === state.working!.id ? state.working! : l));
+      state.modalOpen = false;
+      state.original = null;
+      state.working = null;
+      state.activeLineId = null;
+      state.selectedMachineId = null;
     },
-
     setWorking(state, action: PayloadAction<LineConfig>) {
-      state.editor.working = action.payload;
+      state.working = action.payload;
     },
     selectMachine(state, action: PayloadAction<UUID | null>) {
-      state.editor.selectedMachineId = action.payload;
-    },
-
-    addMachine(state) {
-      if (!state.editor.working) return;
-      const w = state.editor.working;
-      const nx = (w.machines.length + 1) * 220;
-      w.machines.push({
-        id: uid(),
-        name: `New Machine ${w.machines.length + 1}`,
-        type: 'Custom',
-        x: nx, y: 350,
-        imageUrl: '',
-        cfx: { host: '10.0.0.100', port: 1883, topic: 'cfx/new' },
-        params: {},
-      });
+      state.selectedMachineId = action.payload;
     },
     moveMachine(state, action: PayloadAction<{ id: UUID; dx: number; dy: number }>) {
-      const w = state.editor.working;
-      if (!w) return;
-      const m = w.machines.find(m => m.id === action.payload.id);
+      if (!state.working) return;
+      const m = state.working.machines.find((x) => x.id === action.payload.id);
       if (!m) return;
       m.x += action.payload.dx;
       m.y += action.payload.dy;
     },
     updateMachine(state, action: PayloadAction<Machine>) {
-      const w = state.editor.working;
-      if (!w) return;
-      const i = w.machines.findIndex(m => m.id === action.payload.id);
-      if (i >= 0) w.machines[i] = action.payload;
+      if (!state.working) return;
+      state.working.machines = state.working.machines.map((m) =>
+        m.id === action.payload.id ? action.payload : m
+      );
     },
-
+    addMachine(state) {
+      if (!state.working) return;
+      state.working.machines.push({
+        id: nanoid(8),
+        name: `New Machine ${state.working.machines.length + 1}`,
+        type: 'Custom',
+        x: (state.working.machines.length + 1) * 220,
+        y: 350,
+        imageUrl: '',
+        cfx: { host: '10.0.0.100', port: 1883, topic: 'cfx/new' },
+        params: {},
+      });
+    },
     addConnection(state, action: PayloadAction<{ fromId: UUID; toId: UUID }>) {
-      const w = state.editor.working;
-      if (!w) return;
-      w.connections.push(action.payload);
+      if (!state.working) return;
+      state.working.connections.push(action.payload);
     },
     removeConnection(state, action: PayloadAction<{ fromId: UUID; toId: UUID }>) {
-      const w = state.editor.working;
-      if (!w) return;
-      w.connections = w.connections.filter(c => !(c.fromId === action.payload.fromId && c.toId === action.payload.toId));
+      if (!state.working) return;
+      state.working.connections = state.working.connections.filter(
+        (c) => !(c.fromId === action.payload.fromId && c.toId === action.payload.toId)
+      );
     },
-  }
+  },
 });
 
 export const {
