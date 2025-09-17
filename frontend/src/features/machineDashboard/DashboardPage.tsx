@@ -1,17 +1,14 @@
-import React, { useEffect, useMemo } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createSelector } from '@reduxjs/toolkit';
 import type { AppDispatch, RootState } from '../../store';
 import { fetchCfxData, clearProcessedData } from './state/cfxDataSlice';
-import { addEvent, clearAllEvents } from './state/eventsSlice';
-import { updateMachineStatus } from './state/machineStatesSlice';
-import type { MachineStatus } from './state/machineStatesSlice';
-import { addAlert, clearAllAlerts } from './state/alertsSlice';
+import { clearAllEvents } from './state/eventsSlice';
+import { clearAllAlerts } from './state/alertsSlice';
 import DashboardCard from './components/DashboardCard';
 import LiveEventFeed from './components/LiveEventFeed';
 import { BoltIcon, CubeIcon, ClockIcon, CheckCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { kpiData } from '../../data/machineData';
-import type { UUID } from '../lineConfiguration/types';
 import LineSelector from '../lineConfiguration/components/LineSelector';
 
 // Memoized selectors to prevent unnecessary re-renders
@@ -32,22 +29,11 @@ const selectAlerts = createSelector(
 
 const DashboardPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { data: cfxData, status } = useSelector((state: RootState) => state.cfxData);
-  const { lines } = useSelector((state: RootState) => state.lineConfig);
+  const { status } = useSelector((state: RootState) => state.cfxData);
   
   const machineStates = useSelector(selectMachineStates);
   const events = useSelector(selectEvents);
   const alerts = useSelector(selectAlerts);
-
-  const machineToLineMap = useMemo(() => {
-    const map: Record<string, UUID> = {};
-    lines.forEach(line => {
-      line.machines.forEach(machine => {
-        map[machine.name] = line.id;
-      });
-    });
-    return map;
-  }, [lines]);
 
   const handleReload = () => {
     // Clear processed data and fetch fresh CFX data
@@ -56,67 +42,6 @@ const DashboardPage: React.FC = () => {
     dispatch(clearProcessedData());
     dispatch(fetchCfxData());
   };
-
-  useEffect(() => {
-    if (status === 'succeeded' && cfxData.length > 0) {
-      const processedIds = new Set<string>();
-
-      cfxData.forEach(msg => {
-        if (processedIds.has(msg.UniqueID)) return;
-        processedIds.add(msg.UniqueID);
-
-        const machineName = msg.Source;
-        const lineId = machineToLineMap[machineName];
-
-        if (!lineId) return;
-
-        // Add to event feed
-        dispatch(addEvent({ lineId, event: msg }));
-
-        // Update machine status
-        if (msg.MessageName === 'CFX.ResourcePerformance.StationStateChanged') {
-          const state = msg.MessageBody.NewState;
-          let newStatus: MachineStatus = 'Unknown';
-
-          // Mapping based on SEMI E58 state codes
-          const stateCode = parseInt(state);
-          if (stateCode >= 1000 && stateCode <= 1999) {
-            // Productive Time (1000-1999)
-            newStatus = 'Running';
-          } else if (stateCode === 2100) {
-            // Standby Time (2100)
-            newStatus = 'Idle';
-          } else if (stateCode >= 3000 && stateCode <= 3999) {
-            // Engineering Time (3000-3999)
-            newStatus = 'Engineering';
-          } else if (stateCode >= 4100 && stateCode <= 4900) {
-            // Scheduled Downtime (4100-4900)
-            newStatus = 'Down';
-          } else if (stateCode === 5000) {
-            // Unscheduled Downtime (5000)
-            newStatus = 'Down';
-          } else {
-            newStatus = 'Unknown';
-          }
-          
-          dispatch(updateMachineStatus({ lineId, machineName, status: newStatus }));
-        }
-
-        // Add alerts for faults
-        if (msg.MessageName === 'CFX.ResourcePerformance.FaultOccurred') {
-          dispatch(addAlert({
-            lineId,
-            alert: {
-              id: msg.UniqueID,
-              type: 'error',
-              message: `Fault on ${msg.Source}: ${msg.MessageBody.Fault.FaultCode}`,
-              time: new Date(msg.TimeStamp).toLocaleString(),
-            }
-          }));
-        }
-      });
-    }
-  }, [cfxData, status, dispatch, machineToLineMap]);
 
   return (
     <div className="p-8">
