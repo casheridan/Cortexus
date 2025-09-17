@@ -5,12 +5,14 @@ interface CFXDataState {
   data: CFXData[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  lastFetched: number | null;
 }
 
 const initialState: CFXDataState = {
   data: [],
   status: 'idle',
   error: null,
+  lastFetched: null,
 };
 
 export const fetchCfxData = createAsyncThunk('cfxData/fetchCfxData', async () => {
@@ -22,7 +24,12 @@ export const fetchCfxData = createAsyncThunk('cfxData/fetchCfxData', async () =>
 const cfxDataSlice = createSlice({
   name: 'cfxData',
   initialState,
-  reducers: {},
+  reducers: {
+    clearProcessedData: (state) => {
+      // Reset status to allow reprocessing of existing data
+      state.status = 'idle';
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCfxData.pending, (state) => {
@@ -31,6 +38,7 @@ const cfxDataSlice = createSlice({
       .addCase(fetchCfxData.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.data = action.payload;
+        state.lastFetched = Date.now();
       })
       .addCase(fetchCfxData.rejected, (state, action) => {
         state.status = 'failed';
@@ -39,4 +47,5 @@ const cfxDataSlice = createSlice({
   },
 });
 
+export const { clearProcessedData } = cfxDataSlice.actions;
 export default cfxDataSlice.reducer;

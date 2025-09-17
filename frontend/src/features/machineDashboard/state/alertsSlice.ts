@@ -12,11 +12,13 @@ export interface Alert {
 interface AlertsState {
   alertsByLine: Record<UUID, Alert[]>;
   maxAlerts: number;
+  processedAlertIds: string[];
 }
 
 const initialState: AlertsState = {
   alertsByLine: {},
   maxAlerts: 10,
+  processedAlertIds: [],
 };
 
 const alertsSlice = createSlice({
@@ -25,6 +27,12 @@ const alertsSlice = createSlice({
   reducers: {
     addAlert: (state, action: PayloadAction<{ lineId: UUID; alert: Alert }>) => {
       const { lineId, alert } = action.payload;
+      
+      // Check if this alert has already been processed
+      if (state.processedAlertIds.includes(alert.id)) {
+        return;
+      }
+      
       if (!state.alertsByLine[lineId]) {
         state.alertsByLine[lineId] = [];
       }
@@ -32,9 +40,16 @@ const alertsSlice = createSlice({
       if (state.alertsByLine[lineId].length > state.maxAlerts) {
         state.alertsByLine[lineId].pop();
       }
+      
+      // Mark this alert as processed
+      state.processedAlertIds.push(alert.id);
+    },
+    clearAllAlerts: (state) => {
+      state.alertsByLine = {};
+      state.processedAlertIds = [];
     },
   },
 });
 
-export const { addAlert } = alertsSlice.actions;
+export const { addAlert, clearAllAlerts } = alertsSlice.actions;
 export default alertsSlice.reducer;

@@ -3,6 +3,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLineConfigs } from './features/lineConfiguration/state/lineConfigSlice';
 import { initializeMachineStates } from './features/machineDashboard/state/machineStatesSlice';
+import { fetchCfxData, clearProcessedData } from './features/machineDashboard/state/cfxDataSlice';
+import { clearAllEvents } from './features/machineDashboard/state/eventsSlice';
+import { clearAllAlerts } from './features/machineDashboard/state/alertsSlice';
 import type { AppDispatch, RootState } from './store';
 
 import DashboardPage from './features/machineDashboard/DashboardPage';
@@ -16,6 +19,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     dispatch(fetchLineConfigs());
+    // Clear any existing processed data and fetch fresh CFX data on app initialization
+    dispatch(clearAllEvents());
+    dispatch(clearAllAlerts());
+    dispatch(clearProcessedData());
+    dispatch(fetchCfxData());
   }, [dispatch]);
 
   useEffect(() => {

@@ -1,34 +1,43 @@
 import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { createSelector } from '@reduxjs/toolkit';
 import type { AppDispatch, RootState } from '../../store';
-import { fetchCfxData } from './state/cfxDataSlice';
-import { addEvent } from './state/eventsSlice';
+import { fetchCfxData, clearProcessedData } from './state/cfxDataSlice';
+import { addEvent, clearAllEvents } from './state/eventsSlice';
 import { updateMachineStatus } from './state/machineStatesSlice';
 import type { MachineStatus } from './state/machineStatesSlice';
-import { addAlert } from './state/alertsSlice';
+import { addAlert, clearAllAlerts } from './state/alertsSlice';
 import DashboardCard from './components/DashboardCard';
 import LiveEventFeed from './components/LiveEventFeed';
-import { BoltIcon, CubeIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { BoltIcon, CubeIcon, ClockIcon, CheckCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { kpiData } from '../../data/machineData';
 import type { UUID } from '../lineConfiguration/types';
 import LineSelector from '../lineConfiguration/components/LineSelector';
 
+// Memoized selectors to prevent unnecessary re-renders
+const selectMachineStates = createSelector(
+  [(state: RootState) => state.machineStates.statesByLine, (state: RootState) => state.lineConfig.activeLineId],
+  (statesByLine, activeLineId) => activeLineId ? statesByLine[activeLineId] : {}
+);
+
+const selectEvents = createSelector(
+  [(state: RootState) => state.events.eventsByLine, (state: RootState) => state.lineConfig.activeLineId],
+  (eventsByLine, activeLineId) => activeLineId ? eventsByLine[activeLineId] || [] : []
+);
+
+const selectAlerts = createSelector(
+  [(state: RootState) => state.alerts.alertsByLine, (state: RootState) => state.lineConfig.activeLineId],
+  (alertsByLine, activeLineId) => activeLineId ? alertsByLine[activeLineId] || [] : []
+);
+
 const DashboardPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { data: cfxData, status } = useSelector((state: RootState) => state.cfxData);
-  const { lines, activeLineId } = useSelector((state: RootState) => state.lineConfig);
+  const { lines } = useSelector((state: RootState) => state.lineConfig);
   
-  const machineStates = useSelector((state: RootState) => 
-    activeLineId ? state.machineStates.statesByLine[activeLineId] : {}
-  );
-
-  const events = useSelector((state: RootState) => 
-    activeLineId ? state.events.eventsByLine[activeLineId] || [] : []
-  );
-
-  const alerts = useSelector((state: RootState) =>
-    activeLineId ? state.alerts.alertsByLine[activeLineId] || [] : []
-  );
+  const machineStates = useSelector(selectMachineStates);
+  const events = useSelector(selectEvents);
+  const alerts = useSelector(selectAlerts);
 
   const machineToLineMap = useMemo(() => {
     const map: Record<string, UUID> = {};
@@ -40,11 +49,13 @@ const DashboardPage: React.FC = () => {
     return map;
   }, [lines]);
 
-  useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchCfxData());
-    }
-  }, [status, dispatch]);
+  const handleReload = () => {
+    // Clear processed data and fetch fresh CFX data
+    dispatch(clearAllEvents());
+    dispatch(clearAllAlerts());
+    dispatch(clearProcessedData());
+    dispatch(fetchCfxData());
+  };
 
   useEffect(() => {
     if (status === 'succeeded' && cfxData.length > 0) {
@@ -111,7 +122,17 @@ const DashboardPage: React.FC = () => {
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <LineSelector />
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleReload}
+            disabled={status === 'loading'}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ArrowPathIcon className={`w-4 h-4 ${status === 'loading' ? 'animate-spin' : ''}`} />
+            <span>{status === 'loading' ? 'Loading...' : 'Reload Data'}</span>
+          </button>
+          <LineSelector />
+        </div>
       </div>
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
