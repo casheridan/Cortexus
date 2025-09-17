@@ -12,6 +12,8 @@ import type { UUID } from './features/lineConfiguration/types';
 
 import DashboardPage from './features/machineDashboard/DashboardPage';
 import LineConfigurationPage from './features/lineConfiguration/LineConfigurationPage';
+import ProductionMonitorPage from './features/productionMonitor/ProductionMonitorPage';
+import BoardsPage from './features/boards/BoardsPage';
 import SettingsPage from './pages/SettingsPage';
 import MainLayout from './components/layout/MainLayout';
 
@@ -147,6 +149,8 @@ const App: React.FC = () => {
       <Route element={<MainLayout />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/production-monitor" element={<ProductionMonitorPage />} />
+        <Route path="/boards" element={<BoardsPage />} />
         <Route path="/line-config" element={<LineConfigurationPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>

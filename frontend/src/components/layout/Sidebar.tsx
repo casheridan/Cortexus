@@ -5,6 +5,8 @@ import {
   ChartBarIcon,
   Cog6ToothIcon,
   WrenchIcon,
+  ComputerDesktopIcon,
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 
 const Sidebar: React.FC = () => {
@@ -15,7 +17,16 @@ const Sidebar: React.FC = () => {
       label: 'Dashboard',
       icon: ChartPieIcon,
     },
-    // Analytics is not implemented
+    {
+      to: '/production-monitor',
+      label: 'Production Monitor',
+      icon: ComputerDesktopIcon,
+    },
+    {
+      to: '/boards',
+      label: 'Board Tracking',
+      icon: Squares2X2Icon,
+    },
     {
       to: '/line-config',
       label: 'Line Configuration',
