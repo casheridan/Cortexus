@@ -1,6 +1,9 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchLineConfigs } from './features/lineConfiguration/state/lineConfigSlice';
+import { initializeMachineStates } from './features/machineDashboard/state/machineStatesSlice';
+import type { AppDispatch, RootState } from './store';
 
 import DashboardPage from './features/machineDashboard/DashboardPage';
 import LineConfigurationPage from './features/lineConfiguration/LineConfigurationPage';
@@ -8,6 +11,21 @@ import SettingsPage from './pages/SettingsPage';
 import MainLayout from './components/layout/MainLayout';
 
 const App: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { lines, activeLineId } = useSelector((state: RootState) => state.lineConfig);
+
+  useEffect(() => {
+    dispatch(fetchLineConfigs());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const activeLine = lines.find(line => line.id === activeLineId);
+    if (activeLine && activeLine.machines && activeLineId) {
+      const machineNames = activeLine.machines.map(m => m.name);
+      dispatch(initializeMachineStates({ lineId: activeLineId, machineNames }));
+    }
+  }, [lines, activeLineId, dispatch]);
+
   return (
     <Routes>
       <Route element={<MainLayout />}>

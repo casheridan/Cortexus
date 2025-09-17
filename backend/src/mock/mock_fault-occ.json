@@ -1,0 +1,26 @@
+{
+  "MessageName": "CFX.ResourcePerformance.FaultOccurred",
+  "Version": "1.1",
+  "TimeStamp": "2020-11-17T15:03:51.791+09:00",
+  "UniqueID": "beed7714-79f1-4167-8159-74f89f07e8ec",
+  "Source": "AOI-1",
+  "Target": null,
+  "RequestID": null,
+  "MessageBody": {
+    "$type": "CFX.ResourcePerformance.FaultOccurred, CFX",
+    "Fault": {
+      "Cause": "MechanicalFailure",
+      "Severity": "Error",
+      "FaultCode": "620004",
+      "FaultOccurrenceId": "54c6bb87-b464-46d3-ad6d-5a468de506c7",
+      "Lane": 1,
+      "Stage": null,
+      "SideLocation": "Unknown",
+      "AccessType": "Unknown",
+      "Description": null,
+      "DescriptionTranslations": {},
+      "OccurredAt": "2020-11-17T15:03:51.791+09:00",
+      "DueDateTime": null
+    }
+  }
+}

@@ -3,11 +3,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { TypedUseSelectorHook } from 'react-redux';
 import lineConfigReducer from '../features/lineConfiguration/state/lineConfigSlice';
 import uiReducer from '../components/ui/uiSlice';
+import cfxDataReducer from '../features/machineDashboard/state/cfxDataSlice';
+import eventsReducer from '../features/machineDashboard/state/eventsSlice';
+import machineStatesReducer from '../features/machineDashboard/state/machineStatesSlice';
+import alertsReducer from '../features/machineDashboard/state/alertsSlice';
 
 export const store = configureStore({
   reducer: {
     lineConfig: lineConfigReducer,
     ui: uiReducer,
+    cfxData: cfxDataReducer,
+    events: eventsReducer,
+    machineStates: machineStatesReducer,
+    alerts: alertsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

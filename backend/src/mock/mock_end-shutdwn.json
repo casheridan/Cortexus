@@ -1,0 +1,13 @@
+{
+  "MessageName": "CFX.EndpointShuttingDown",
+  "Version": "1.1",
+  "TimeStamp": "2020-11-13T13:40:26.047+09:00",
+  "UniqueID": "6e238b1c-4797-4ef9-a652-c73ffd9fbb7f",
+  "Source": "SMT-2",
+  "Target": null,
+  "RequestID": null,
+  "MessageBody": {
+    "$type": "CFX.EndpointShuttingDown, CFX",
+    "CFXHandle": "SMT-2"
+  }
+}

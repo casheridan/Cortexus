@@ -19,6 +19,7 @@
     "@tailwindcss/vite": "^4.1.13"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.8",
     "@reduxjs/toolkit": "^2.9.0",
     "@types/react-router-dom": "^5.3.3",
     "react-redux": "^9.2.0",

@@ -1,0 +1,16 @@
+{
+  "MessageName": "CFX.ResourcePerformance.StationStateChanged",
+  "Version": "1.1",
+  "TimeStamp": "2020-11-13T16:05:33.789+09:00",
+  "UniqueID": "12345678-9abc-def0-1234-56789abcdef0",
+  "Source": "SMT-2",
+  "Target": null,
+  "RequestID": null,
+  "MessageBody": {
+    "$type": "CFX.ResourcePerformance.StationStateChanged, CFX",
+    "OldState": "1100",
+    "OldStateDuration": "01:22:15",
+    "NewState": "5000",
+    "RelatedFault": null
+  }
+}

@@ -1,0 +1,61 @@
+[
+  {
+    "id": "line-1",
+    "name": "SMT Line A",
+    "machines": [
+      {
+        "id": "SMT-1",
+        "name": "SMT-1",
+        "type": "Placement",
+        "x": 100,
+        "y": 100,
+        "params": {},
+        "cfx": { "host": "10.0.0.101", "port": 1883, "topic": "cfx/line-1/smt-1" }
+      },
+      {
+        "id": "AOI-1",
+        "name": "AOI-1",
+        "type": "Inspection",
+        "x": 300,
+        "y": 100,
+        "params": {},
+        "cfx": { "host": "10.0.0.102", "port": 1883, "topic": "cfx/line-1/aoi-1" }
+      },
+      {
+        "id": "Reflow-1",
+        "name": "Reflow-1",
+        "type": "Oven",
+        "x": 500,
+        "y": 100,
+        "params": {},
+        "cfx": { "host": "10.0.0.103", "port": 1883, "topic": "cfx/line-1/reflow-1" }
+      }
+    ],
+    "connections": []
+  },
+  {
+    "id": "line-2",
+    "name": "SMT Line B",
+    "machines": [
+      {
+        "id": "SMT-2",
+        "name": "SMT-2",
+        "type": "Placement",
+        "x": 100,
+        "y": 100,
+        "params": {},
+        "cfx": { "host": "10.0.0.201", "port": 1883, "topic": "cfx/line-2/smt-2" }
+      },
+      {
+        "id": "SPI-1",
+        "name": "SPI-1",
+        "type": "Inspection",
+        "x": 300,
+        "y": 100,
+        "params": {},
+        "cfx": { "host": "10.0.0.202", "port": 1883, "topic": "cfx/line-2/spi-1" }
+      }
+    ],
+    "connections": []
+  }
+]

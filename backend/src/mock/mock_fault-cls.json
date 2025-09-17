@@ -1,0 +1,14 @@
+{
+  "MessageName": "CFX.ResourcePerformance.FaultCleared",
+  "Version": "1.1",
+  "TimeStamp": "2020-11-13T14:16:22.089+09:00",
+  "UniqueID": "25f033a8-47c9-4051-990d-4c5966e951d6",
+  "Source": "SPI-1",
+  "Target": null,
+  "RequestID": null,
+  "MessageBody": {
+    "$type": "CFX.ResourcePerformance.FaultCleared, CFX",
+    "FaultOccurrenceId": "f38e091a-5154-42ae-b09e-e0bc82e2d80f",
+    "Operator": null
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "MessageName": "CFX.ResourcePerformance.StationStateChanged",
+  "Version": "1.1",
+  "TimeStamp": "2020-11-13T15:22:15.456+09:00",
+  "UniqueID": "f9e8d7c6-abcd-1234-5678-9abc01234567",
+  "Source": "Reflow-1",
+  "Target": null,
+  "RequestID": null,
+  "MessageBody": {
+    "$type": "CFX.ResourcePerformance.StationStateChanged, CFX",
+    "OldState": "2100",
+    "OldStateDuration": "00:08:45",
+    "NewState": "3100",
+    "RelatedFault": null
+  }
+}

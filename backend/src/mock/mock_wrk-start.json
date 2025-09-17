@@ -1,0 +1,29 @@
+{
+  "MessageName": "CFX.Production.WorkStarted",
+  "Version": "1.1",
+  "TimeStamp": "2020-11-18T09:57:55.521+09:00",
+  "UniqueID": "349034d3-d6e0-4baf-8071-ac041f0f0770",
+  "Source": "Reflow-1",
+  "Target": null,
+  "RequestID": null,
+  "MessageBody": {
+    "$type": "CFX.Production.WorkStarted, CFX",
+    "PrimaryIdentifier": "CIRCUIT0001",
+    "HermesIdentifier": null,
+    "TransactionID": "85a9a729-7078-40bc-82ea-2497097c77dd",
+    "Lane": 1,
+    "UnitCount": 1,
+    "Units": [
+      {
+        "UnitIdentifier": "CIRCUIT0001",
+        "PositionNumber": 1,
+        "PositionName": null,
+        "X": 0.0,
+        "Y": 0.0,
+        "Rotation": 0.0,
+        "FlipX": false,
+        "FlipY": false
+      }
+    ]
+  }
+}

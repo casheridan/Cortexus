@@ -1,30 +1,29 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
+import { createSlice, nanoid, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { initialLines } from '../../../data/lineData';
 import type { LineConfig, Machine, UUID } from '../types';
+import mockLineConfigs from '../../../data/mockLineConfig.json';
 
-const sampleLine = (name = 'SMT Line A'): LineConfig => ({
-  id: nanoid(8),
-  name,
-  machines: [],
-  connections: [],
+export const fetchLineConfigs = createAsyncThunk('lineConfig/fetchLineConfigs', async () => {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  return mockLineConfigs as LineConfig[];
 });
 
 type LineConfigState = {
   lines: LineConfig[];
+  activeLineId: UUID | null;
   modalOpen: boolean;
   working: LineConfig | null;
   original: LineConfig | null;
-  activeLineId: UUID | null;
   selectedMachineId: UUID | null;
 };
 
 const initialState: LineConfigState = {
-  lines: initialLines,
+  lines: [],
+  activeLineId: null,
   modalOpen: false,
   working: null,
   original: null,
-  activeLineId: null,
   selectedMachineId: null,
 };
 
@@ -32,13 +31,22 @@ const slice = createSlice({
   name: 'lineConfig',
   initialState,
   reducers: {
+    setActiveLine(state, action: PayloadAction<UUID>) {
+      state.activeLineId = action.payload;
+    },
     addLine(state) {
-      state.lines.push(sampleLine(`SMT Line ${String.fromCharCode(65 + state.lines.length)}`));
+      const newLine: LineConfig = {
+        id: nanoid(8),
+        name: `SMT Line ${String.fromCharCode(65 + state.lines.length)}`,
+        machines: [],
+        connections: [],
+      };
+      state.lines.push(newLine);
     },
     deleteLine(state, action: PayloadAction<UUID>) {
       state.lines = state.lines.filter((l) => l.id !== action.payload);
       if (state.activeLineId === action.payload) {
-        state.activeLineId = null;
+        state.activeLineId = state.lines.length > 0 ? state.lines[0].id : null;
         state.modalOpen = false;
         state.working = null;
         state.original = null;
@@ -55,7 +63,7 @@ const slice = createSlice({
     },
     closeEditor(state) {
       state.modalOpen = false;
-      state.activeLineId = null;
+      // Keep activeLineId, don't reset it
       state.working = null;
       state.original = null;
       state.selectedMachineId = null;
@@ -66,7 +74,6 @@ const slice = createSlice({
       state.modalOpen = false;
       state.original = null;
       state.working = null;
-      state.activeLineId = null;
       state.selectedMachineId = null;
     },
     setWorking(state, action: PayloadAction<LineConfig>) {
@@ -101,25 +108,32 @@ const slice = createSlice({
         params: {},
       });
     },
-    addConnection(state, action: PayloadAction<{ fromId: UUID; toId: UUID }>) {
-      if (!state.working) return;
-      state.working.connections.push(action.payload);
-    },
-    removeConnection(state, action: PayloadAction<{ fromId: UUID; toId: UUID }>) {
-      if (!state.working) return;
-      state.working.connections = state.working.connections.filter(
-        (c) => !(c.fromId === action.payload.fromId && c.toId === action.payload.toId)
-      );
-    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(
+      fetchLineConfigs.fulfilled,
+      (state, action: PayloadAction<LineConfig[]>) => {
+        state.lines = action.payload;
+        if (state.lines.length > 0 && !state.activeLineId) {
+          state.activeLineId = state.lines[0].id;
+        }
+      }
+    );
   },
 });
 
 export const {
-  addLine, deleteLine,
-  openEditor, closeEditor, saveEditor,
-  setWorking, selectMachine,
-  addMachine, moveMachine, updateMachine,
-  addConnection, removeConnection
+  setActiveLine,
+  addLine,
+  deleteLine,
+  openEditor,
+  closeEditor,
+  saveEditor,
+  setWorking,
+  selectMachine,
+  moveMachine,
+  updateMachine,
+  addMachine,
 } = slice.actions;
 
 export default slice.reducer;

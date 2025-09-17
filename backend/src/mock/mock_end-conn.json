@@ -1,0 +1,15 @@
+{
+  "MessageName": "CFX.EndpointConnected",
+  "Version": "1.1",
+  "TimeStamp": "2020-11-13T13:40:26.061+09:00",
+  "UniqueID": "b6fa5ba6-c3c8-4a77-9743-cac2e7892fd7",
+  "Source": "SMT-1",
+  "Target": null,
+  "RequestID": null,
+  "MessageBody": {
+    "$type": "CFX.EndpointConnected, CFX",
+    "CFXHandle": "SMT-1",
+    "RequestNetworkUri": "amqp://abcdef",
+    "RequestTargetAddress": "/queue/SMT-1"
+  }
+}

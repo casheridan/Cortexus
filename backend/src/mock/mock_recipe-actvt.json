@@ -1,0 +1,19 @@
+{
+  "MessageName": "CFX.Production.RecipeActivated",
+  "Version": "1.1",
+  "TimeStamp": "2020-11-13T14:12:46.781+09:00",
+  "UniqueID": "2be6d0cc-7df5-4fa4-8b5e-236e1293b76d",
+  "Source": "SMT-1",
+  "Target": null,
+  "RequestID": null,
+  "MessageBody": {
+    "$type": "CFX.Production.RecipeActivated, CFX",
+    "RecipeName": "CFX_Test_prg001",
+    "Revision": null,
+    "Lane": 1,
+    "Stage": null,
+    "ExpectedCycleTime": 0.0,
+    "ExpectedUnitsPerWorkTransaction": 1.0,
+    "NumberOfComponentsPerUnit": 0.0
+  }
+}
