@@ -7,6 +7,9 @@ import cfxDataReducer from '../features/machineDashboard/state/cfxDataSlice';
 import eventsReducer from '../features/machineDashboard/state/eventsSlice';
 import machineStatesReducer from '../features/machineDashboard/state/machineStatesSlice';
 import alertsReducer from '../features/machineDashboard/state/alertsSlice';
+import boardsReducer from '../features/boards/state/boardsSlice';
+import dashboardDataReducer from '../features/machineDashboard/state/dashboardDataSlice';
+import productionDataReducer from '../features/productionMonitor/state/productionDataSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +19,9 @@ export const store = configureStore({
     events: eventsReducer,
     machineStates: machineStatesReducer,
     alerts: alertsReducer,
+    boards: boardsReducer,
+    dashboardData: dashboardDataReducer,
+    productionData: productionDataReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

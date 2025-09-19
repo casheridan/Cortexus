@@ -54,4 +54,4 @@ dist-ssr
 # Testing
 # -------
 coverage/
-.nyc_output/
+.nyc_output/.env

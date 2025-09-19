@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '../../store';
-import CSVUploader from './components/CSVUploader';
 import AddBoardModal from './components/AddBoardModal';
+import CSVUploader from './components/CSVUploader';
 import { 
   MagnifyingGlassIcon,
   EyeIcon,
@@ -12,24 +12,16 @@ import {
   PlusIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-
-// Board interface with updated fields
-interface Board {
-  id: string;
-  name: string;
-  internalSerialNumber: string;
-  assemblyNumber: string;
-  lastRanTime: string;
-  currentStation?: string;
-  linkedComponents?: Array<{
-    id: string;
-    description: string;
-    internalPartNumber: string;
-    referenceDesignator: string;
-    quantity: number;
-  }>;
-  machineRecipes?: Record<string, boolean>; // machineId -> hasRecipe
-}
+import { 
+  fetchBoards, 
+  addBoard, 
+  updateBoard, 
+  updateBoardComponents,
+  clearError,
+  type Board,
+  type NewBoardData,
+  type Component
+} from './state/boardsSlice';
 
 // Recipe status interface for machine checkboxes
 interface MachineRecipeStatus {
@@ -39,62 +31,6 @@ interface MachineRecipeStatus {
   lineName: string;
   hasRecipe: boolean;
 }
-
-// Mock board data with updated structure
-const mockBoards: Board[] = [
-  {
-    id: 'board-001',
-    name: 'Main Control Board',
-    internalSerialNumber: 'MCB-2024-001247',
-    assemblyNumber: 'ASM-PCB-A7829',
-    lastRanTime: '2024-01-15T14:23:15Z',
-    linkedComponents: [
-      { id: 'comp-001', description: '4.7K Ohm Resistor', internalPartNumber: 'R-4K7-SMD-0603', referenceDesignator: 'R1', quantity: 1 },
-      { id: 'comp-002', description: '100nF Capacitor', internalPartNumber: 'C-100nF-X7R-0603', referenceDesignator: 'C1', quantity: 2 },
-      { id: 'comp-003', description: 'STM32 Microcontroller', internalPartNumber: 'STM32F407VGT6-LQFP100', referenceDesignator: 'U1', quantity: 1 },
-    ],
-    machineRecipes: {
-      'SMT-1': true,
-      'AOI-1': true,
-      'Reflow-1': false,
-      'SMT-2': true,
-      'SPI-1': false,
-    }
-  },
-  {
-    id: 'board-002',
-    name: 'Power Management Board',
-    internalSerialNumber: 'PMB-2024-001248',
-    assemblyNumber: 'ASM-PCB-A7830',
-    lastRanTime: '2024-01-15T14:20:00Z',
-    currentStation: 'SMT-1',
-    linkedComponents: [],
-    machineRecipes: {
-      'SMT-1': true,
-      'AOI-1': false,
-      'Reflow-1': true,
-      'SMT-2': false,
-      'SPI-1': true,
-    }
-  },
-  {
-    id: 'board-003',
-    name: 'Sensor Interface Board',
-    internalSerialNumber: 'SIB-2024-001249',
-    assemblyNumber: 'ASM-PCB-A7831',
-    lastRanTime: '2024-01-15T13:45:00Z',
-    linkedComponents: [
-      { id: 'comp-004', description: 'Environmental Sensor', internalPartNumber: 'BME280-LGA-2.5x2.5', referenceDesignator: 'U2', quantity: 1 },
-    ],
-    machineRecipes: {
-      'SMT-1': false,
-      'AOI-1': true,
-      'Reflow-1': true,
-      'SMT-2': true,
-      'SPI-1': true,
-    }
-  }
-];
 
 // Selectors
 const selectAllLines = (state: RootState) => state.lineConfig.lines;
@@ -119,14 +55,34 @@ const selectAllMachines = createSelector(
 );
 
 const BoardsPage: React.FC = () => {
+  const dispatch = useDispatch();
+  
+  // Redux state
+  const { boards, loading, error } = useSelector((state: RootState) => state.boards);
+  const allMachines = useSelector(selectAllMachines);
+  
+  // Local state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
-  const [boards, setBoards] = useState<Board[]>(mockBoards);
   const [componentSearchTerm, setComponentSearchTerm] = useState('');
 
-  const allMachines = useSelector(selectAllMachines);
+  // Load boards on component mount (but only if we don't have data already)
+  useEffect(() => {
+    if (boards.length === 0) {
+      dispatch(fetchBoards() as any);
+    }
+  }, [dispatch, boards.length]);
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      if (error) {
+        dispatch(clearError());
+      }
+    };
+  }, [dispatch, error]);
 
   const filteredBoards = useMemo(() => {
     return boards.filter(board => {
@@ -137,89 +93,93 @@ const BoardsPage: React.FC = () => {
     });
   }, [boards, searchTerm]);
 
-
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleString();
   };
 
-
   const handleComponentsUploaded = (boardId: string, components: Array<{
-    id: string;
     description: string;
     internalPartNumber: string;
     referenceDesignator: string;
     quantity: number;
-    boardId?: string;
   }>) => {
-    setBoards(prev => prev.map(board => 
-      board.id === boardId 
-        ? {
-            ...board,
-            linkedComponents: [...(board.linkedComponents || []), ...components]
-          }
-        : board
-    ));
+    const formattedComponents: Component[] = components.map(comp => ({
+      id: `comp-${Date.now()}-${Math.random()}`,
+      ...comp
+    }));
+    
+    dispatch(updateBoardComponents({ boardId, components: formattedComponents }) as any);
     
     // Update selected board if it's the one being updated
     if (selectedBoard?.id === boardId) {
       setSelectedBoard(prev => prev ? {
         ...prev,
-        linkedComponents: [...(prev.linkedComponents || []), ...components]
+        linkedComponents: [...(prev.linkedComponents || []), ...formattedComponents]
       } : null);
     }
     
     console.log(`Added ${components.length} components to board ${boardId}:`, components);
   };
 
-  const handleAddBoard = (newBoardData: {
-    name: string;
-    internalSerialNumber: string;
-    assemblyNumber: string;
-    machineRecipes: Record<string, boolean>;
-  }) => {
-    const newBoard: Board = {
-      id: `board-${Date.now()}`,
-      name: newBoardData.name,
-      internalSerialNumber: newBoardData.internalSerialNumber,
-      assemblyNumber: newBoardData.assemblyNumber,
-      lastRanTime: new Date().toISOString(),
-      linkedComponents: [],
-      machineRecipes: newBoardData.machineRecipes,
-    };
-
-    setBoards(prev => [...prev, newBoard]);
-    setSelectedBoard(newBoard); // Auto-select the newly created board
-    console.log('Added new board:', newBoard);
+  const handleAddBoard = (newBoardData: NewBoardData) => {
+    dispatch(addBoard(newBoardData) as any);
   };
 
-  const handleUpdateBoard = (boardId: string, updatedData: {
-    name: string;
-    internalSerialNumber: string;
-    assemblyNumber: string;
-    machineRecipes: Record<string, boolean>;
-  }) => {
-    setBoards(prev => prev.map(board => 
-      board.id === boardId 
-        ? {
-            ...board,
-            ...updatedData,
-            lastRanTime: new Date().toISOString(), // Update last modified time
-          }
-        : board
-    ));
+  const handleUpdateBoard = (boardId: string, updatedData: NewBoardData) => {
+    dispatch(updateBoard({ id: boardId, boardData: updatedData }) as any);
     
     // Update selected board if it's the one being edited
     if (selectedBoard?.id === boardId) {
       setSelectedBoard(prev => prev ? { ...prev, ...updatedData } : null);
     }
-    
-    console.log('Updated board:', boardId, updatedData);
   };
 
   const handleEditBoard = (board: Board) => {
     setEditingBoard(board);
     setShowAddModal(true);
   };
+
+  // Show loading state
+  if (loading && boards.length === 0) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error loading boards</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => dispatch(fetchBoards() as any)}
+                  className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                >
+                  Try again
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -259,7 +219,6 @@ const BoardsPage: React.FC = () => {
               />
             </div>
           </div>
-
         </div>
       </div>
 

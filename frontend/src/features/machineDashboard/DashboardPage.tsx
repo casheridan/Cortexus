@@ -1,14 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createSelector } from '@reduxjs/toolkit';
 import type { AppDispatch, RootState } from '../../store';
 import { fetchCfxData, clearProcessedData } from './state/cfxDataSlice';
 import { clearAllEvents } from './state/eventsSlice';
 import { clearAllAlerts } from './state/alertsSlice';
+import { fetchDashboardData, refreshDashboardData, clearError } from './state/dashboardDataSlice';
 import DashboardCard from './components/DashboardCard';
 import LiveEventFeed from './components/LiveEventFeed';
 import { BoltIcon, CubeIcon, ClockIcon, CheckCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { kpiData } from '../../data/machineData';
 import LineSelector from '../lineConfiguration/components/LineSelector';
 
 // Memoized selectors to prevent unnecessary re-renders
@@ -30,10 +30,27 @@ const selectAlerts = createSelector(
 const DashboardPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { status } = useSelector((state: RootState) => state.cfxData);
+  const { kpiData, machineStatuses, alerts: dashboardAlerts, loading, error } = useSelector((state: RootState) => state.dashboardData);
   
   const machineStates = useSelector(selectMachineStates);
   const events = useSelector(selectEvents);
   const alerts = useSelector(selectAlerts);
+
+  // Load dashboard data on component mount (but only if we don't have data already)
+  useEffect(() => {
+    if (kpiData.length === 0) {
+      dispatch(fetchDashboardData() as any);
+    }
+  }, [dispatch, kpiData.length]);
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      if (error) {
+        dispatch(clearError());
+      }
+    };
+  }, [dispatch, error]);
 
   const handleReload = () => {
     // Clear processed data and fetch fresh CFX data
@@ -41,7 +58,51 @@ const DashboardPage: React.FC = () => {
     dispatch(clearAllAlerts());
     dispatch(clearProcessedData());
     dispatch(fetchCfxData());
+    // Also refresh dashboard data
+    dispatch(refreshDashboardData() as any);
   };
+
+  // Only show loading state for initial load if no data exists
+  if (loading && kpiData.length === 0 && !error) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error loading dashboard data</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => dispatch(fetchDashboardData() as any)}
+                  className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                >
+                  Try again
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -50,11 +111,11 @@ const DashboardPage: React.FC = () => {
         <div className="flex items-center space-x-4">
           <button
             onClick={handleReload}
-            disabled={status === 'loading'}
+            disabled={status === 'loading' || loading}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <ArrowPathIcon className={`w-4 h-4 ${status === 'loading' ? 'animate-spin' : ''}`} />
-            <span>{status === 'loading' ? 'Loading...' : 'Reload Data'}</span>
+            <ArrowPathIcon className={`w-4 h-4 ${(status === 'loading' || loading) ? 'animate-spin' : ''}`} />
+            <span>{(status === 'loading' || loading) ? 'Loading...' : 'Reload Data'}</span>
           </button>
           <LineSelector />
         </div>
